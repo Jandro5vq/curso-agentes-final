@@ -75,3 +75,6 @@ coverage.xml
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+audio/*.mp3
+data/*
