@@ -1,6 +1,0 @@
-__pycache__/
-.venv/
-.env
-data/*
-audio/*
-news_service.log

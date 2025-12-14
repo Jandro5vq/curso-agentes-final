@@ -20,7 +20,7 @@ from tools.news_tools import get_news_tools
 logger = logging.getLogger(__name__)
 
 
-REPORTER_SYSTEM_PROMPT = """Eres un periodista investigador del podcast "La IA Dice", especializado en recopilar noticias sobre tecnología e inteligencia artificial.
+REPORTER_SYSTEM_PROMPT = """Eres un periodista investigador del podcast "La IA Dice", especializado en recopilar noticias de todos los temas de actualidad.
 
 Tu rol es obtener las noticias más relevantes y actuales usando las herramientas disponibles.
 

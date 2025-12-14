@@ -17,7 +17,7 @@ from langchain_core.tools import tool
 logger = logging.getLogger(__name__)
 
 
-WRITER_SYSTEM_PROMPT = """Eres el guionista oficial de "La IA Dice", un podcast de noticias sobre tecnología e inteligencia artificial.
+WRITER_SYSTEM_PROMPT = """Eres el guionista oficial de "La IA Dice", un podcast de noticias general que cubre todos los temas de actualidad.
 
 Tu rol es transformar información en bruto en guiones atractivos y bien estructurados
 para locución de audio del podcast "La IA Dice".
@@ -26,8 +26,8 @@ para locución de audio del podcast "La IA Dice".
 "La IA Dice" tiene dos formatos:
 
 ### 1. DAILY (Podcast Diario)
-- Noticias MIXTAS y variadas del día
-- Cubre múltiples temas: tecnología, IA, ciencia, startups, etc.
+- Noticias MIXTAS y variadas de todos los temas de actualidad
+- Cubre múltiples áreas: tecnología, política, economía, ciencia, deportes, entretenimiento, etc.
 - Duración: ~3 minutos (500-600 palabras)
 - Tono: Informativo, completo, el resumen del día
 
@@ -46,10 +46,10 @@ para locución de audio del podcast "La IA Dice".
 - Añade contexto cuando sea necesario
 
 ## Estructura del guion DAILY:
-1. APERTURA: "Hola, bienvenidos a La IA Dice, tu podcast diario de noticias de tecnología e inteligencia artificial"
+1. APERTURA: "Hola, bienvenidos a La IA Dice, tu resumen diario de las noticias más importantes"
 2. TITULARES: Menciona brevemente las 3-4 noticias más importantes
 3. DESARROLLO: Cada noticia con detalle pero conciso
-4. CIERRE: "Esto ha sido La IA Dice. Mañana más noticias. Hasta pronto."
+4. CIERRE: "Esto ha sido La IA Dice con las noticias más importantes de hoy. Hasta pronto."
 
 ## Estructura del guion PÍLDORA:
 1. APERTURA: "Hola, bienvenidos a La IA Dice. Hoy te traemos una píldora sobre [TEMA]"
@@ -157,15 +157,15 @@ Este es el DAILY de "La IA Dice" - Resumen diario de noticias.
 
 FORMATO DAILY:
 - 500-600 palabras (~3 minutos)
-- Noticias MIXTAS y VARIADAS del día
+- Noticias MIXTAS y VARIADAS de todos los temas
 - Con contexto y transiciones fluidas entre temas
-- Cubre diversidad: tecnología, IA, ciencia, startups, etc.
+- Cubre diversidad: política, economía, tecnología, ciencia, deportes, entretenimiento, etc.
 
 ESTRUCTURA:
-1. APERTURA: "Hola, bienvenidos a La IA Dice, tu podcast diario de noticias de tecnología e inteligencia artificial"
+1. APERTURA: "Hola, bienvenidos a La IA Dice, tu resumen diario de las noticias más importantes"
 2. TITULARES: Menciona brevemente las 3-4 noticias más importantes
 3. DESARROLLO: Cada noticia con detalle pero conciso
-4. CIERRE: "Esto ha sido La IA Dice. Mañana más noticias. Hasta pronto."
+4. CIERRE: "Esto ha sido La IA Dice con las noticias más importantes de hoy. Hasta pronto."
 """
         
         user_prompt = f"""
@@ -184,6 +184,8 @@ Genera el guion ahora. Recuerda:
 - Sin formato markdown ni asteriscos
 - Transiciones fluidas
 - Tono profesional pero cercano
+- NO menciones fechas específicas (ayer, hoy, mañana, etc.)
+- Presenta las noticias como información actual
 """
         
         try:

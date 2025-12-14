@@ -137,7 +137,7 @@ class OrchestratorAgent:
         
         # Paso 1: Reporter obtiene noticias
         result["steps"].append({"step": "reporter", "status": "running"})
-        reporter_task = "Obtén las 10 noticias más importantes del día en España. Incluye variedad de temas: política, economía, deportes, tecnología, sociedad."
+        reporter_task = "Obtén las 10 noticias más importantes de actualidad en España. Incluye variedad de temas: política, economía, deportes, tecnología, sociedad."
         
         reporter_result = await self.reporter.invoke(reporter_task)
         result["steps"][-1]["status"] = "completed" if reporter_result["success"] else "failed"

@@ -4,7 +4,7 @@ MCP News Client - Cliente para obtención de noticias
 
 Este módulo implementa el cliente MCP de noticias que proporciona:
 
-- fetch_general_news(): Noticias generales del día
+- fetch_general_news(): Noticias generales de actualidad
 - fetch_topic_news(topic): Noticias sobre un tema específico
 
 Utiliza NewsAPI como fuente principal con fallback a GNews y scraping.
@@ -138,7 +138,7 @@ class NewsClient:
         country: str = "es"
     ) -> list[dict[str, Any]]:
         """
-        Obtiene noticias generales del día.
+        Obtiene noticias generales de actualidad.
         
         Args:
             max_articles: Número máximo de artículos a obtener

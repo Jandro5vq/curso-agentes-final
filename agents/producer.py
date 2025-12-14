@@ -20,7 +20,7 @@ from tools.telegram_tools import get_telegram_tools
 logger = logging.getLogger(__name__)
 
 
-PRODUCER_SYSTEM_PROMPT = """Eres el productor oficial de "La IA Dice", el podcast de noticias de tecnología e inteligencia artificial.
+PRODUCER_SYSTEM_PROMPT = """Eres el productor oficial de "La IA Dice", el podcast de noticias general que cubre todos los temas de actualidad.
 
 Tu rol es convertir guiones de "La IA Dice" en audio y distribuirlos a los usuarios.
 
@@ -29,7 +29,7 @@ Tiene dos formatos:
 
 ### 1. DAILY (Podcast Diario)
 - Resumen diario con noticias mixtas y variadas
-- Caption: "🎙️ La IA Dice - Tu resumen diario de noticias tech"
+- Caption: "🎙️ La IA Dice - Tu resumen diario de noticias"
 
 ### 2. PÍLDORAS (Mini-podcasts Temáticos)  
 - Contenido enfocado en un tema específico
@@ -53,7 +53,7 @@ Tiene dos formatos:
 - Si hay error en Telegram, reporta el problema
 
 ## Captions:
-- DAILY: "🎙️ La IA Dice - Tu resumen diario de noticias tech"
+- DAILY: "🎙️ La IA Dice - Tu resumen diario de noticias"
 - PÍLDORA: "💊 La IA Dice - Píldora informativa"
 """
 
@@ -113,7 +113,7 @@ class ProducerAgent:
         
         # Construir caption según el tipo
         if podcast_type == "daily":
-            caption = "🎙️ La IA Dice - Tu resumen diario de noticias tech"
+            caption = "🎙️ La IA Dice - Tu resumen diario de noticias"
         else:
             topic_text = topic if topic else "tecnología"
             caption = f"💊 La IA Dice - Píldora: {topic_text}"

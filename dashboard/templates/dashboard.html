@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Service - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #1e293b;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #059669;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .section-content {
+            padding: 1.5rem;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.875rem;
+        }
+
+        .table td {
+            color: #334155;
+        }
+
+        .status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-completed {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-error {
+            background-color: #fecaca;
+            color: #991b1b;
+        }
+
+        .status-processing {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-default {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .refresh-btn {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .refresh-btn:hover {
+            background: #047857;
+        }
+
+        .timestamp {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #64748b;
+            font-style: italic;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table {
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>📰 News Service Dashboard</h1>
+    </div>
+
+    <div class="container">
+        <!-- Estadísticas principales -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.total_conversations }}</div>
+                <div class="stat-label">Total Conversaciones</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.conversations_24h }}</div>
+                <div class="stat-label">Últimas 24 horas</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.conversation_states|length }}</div>
+                <div class="stat-label">Estados Activos</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">
+                    <button class="refresh-btn" onclick="refreshData()">🔄 Actualizar</button>
+                </div>
+                <div class="stat-label">Tiempo Real</div>
+            </div>
+        </div>
+
+        <!-- Conversaciones recientes -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">📱 Conversaciones Recientes</h2>
+            </div>
+            <div class="section-content">
+                {% if conversations %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Estado</th>
+                            <th>Duración</th>
+                            <th>Última Actividad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for conv in conversations %}
+                        <tr>
+                            <td>
+                                <strong>{{ conv.user_id[:12] }}{{ '...' if conv.user_id|length > 12 else '' }}</strong>
+                            </td>
+                            <td>
+                                <span
+                                    class="status status-{{ 'completed' if conv.state == 'completed' else 'processing' }}">
+                                    {{ conv.state }}
+                                </span>
+                            </td>
+                            <td>{{ conv.duration }}</td>
+                            <td class="timestamp">{{ conv.updated_at }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="no-data">
+                    No hay conversaciones recientes
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Estados del sistema -->
+        {% if stats.conversation_states %}
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">📊 Estados del Sistema</h2>
+            </div>
+            <div class="section-content">
+                <div class="stats-grid">
+                    {% for state, count in stats.conversation_states.items() %}
+                    <div class="stat-card">
+                        <div class="stat-number">{{ count }}</div>
+                        <div class="stat-label">{{ state }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Status del sistema -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">💚 Estado del Sistema</h2>
+            </div>
+            <div class="section-content">
+                <p><strong>Status:</strong> <span class="status status-completed">Operativo</span></p>
+                <p><strong>Última actualización:</strong> <span class="timestamp" id="last-update">--</span></p>
+                <p><strong>Versión:</strong> 1.0.0</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function refreshData() {
+            console.log('Actualizando datos...');
+
+            // Actualizar estadísticas
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.querySelector('.stats-grid .stat-number').textContent = data.total_conversations;
+                    document.querySelectorAll('.stats-grid .stat-number')[1].textContent = data.conversations_24h;
+                    document.getElementById('last-update').textContent = new Date().toLocaleString('es-ES');
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Auto-refresh cada 30 segundos
+        setInterval(refreshData, 30000);
+
+        // Actualizar timestamp inicial
+        document.getElementById('last-update').textContent = new Date().toLocaleString('es-ES');
+    </script>
+</body>
+
+</html>

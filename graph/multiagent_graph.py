@@ -111,11 +111,11 @@ async def reporter_node(state: MultiAgentState) -> dict[str, Any]:
     user_input = state.get("user_input")
     
     if mode == "daily":
-        # DAILY: Noticias mixtas y variadas del día
+        # DAILY: Noticias mixtas y variadas
         task = """Esto es para el DAILY de "La IA Dice".
-Obtén las 10 noticias más importantes del día con VARIEDAD de temas.
-Incluye: tecnología, IA, ciencia, startups, gadgets, redes sociales, etc.
-El objetivo es dar un resumen completo y diverso del día."""
+Obtén las 10 noticias más importantes con VARIEDAD de temas.
+Incluye: tecnología, IA, ciencia, startups, política, economía, deportes, entretenimiento, etc.
+El objetivo es dar un resumen completo y diverso de la actualidad."""
     elif mode == "mini_podcast":
         # PÍLDORA: Mini-podcast temático sobre un tema específico
         if user_input:
@@ -124,7 +124,7 @@ Busca las 5 noticias más relevantes SOLO sobre este tema específico.
 Es un mini-podcast enfocado, profundiza en este tema concreto."""
         else:
             task = """Esto es para una PÍLDORA de "La IA Dice".
-Obtén las 5 noticias más importantes sobre tecnología e IA.
+Obtén las 5 noticias más importantes del tema de actualidad más relevante.
 Enfócate en un área temática coherente."""
     elif mode == "question":
         task = f"Busca noticias relacionadas con: {user_input}"

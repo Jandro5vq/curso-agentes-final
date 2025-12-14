@@ -168,7 +168,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     welcome_message = f"""
 🎙️ *¡Bienvenido a La IA Dice, {user_name}!*
 
-Tu podcast de noticias de tecnología e IA con *agentes inteligentes*:
+Tu podcast de noticias general con *agentes inteligentes*:
 • 🤖 *ReporterAgent* → Busca noticias
 • ✍️ *WriterAgent* → Genera guiones
 • 🎧 *ProducerAgent* → Produce y envía audio

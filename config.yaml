@@ -23,7 +23,7 @@ news:
   # Default language
   language: "es"
   # Max articles per fetch
-  max_articles: 10
+  max_articles: 15
   # Fuentes españolas preferidas (NewsAPI)
   sources:
     - "el-mundo"
@@ -66,7 +66,7 @@ script:
   # Target duration in seconds for mini podcast
   mini_duration: 60
   # Approximate words per minute for Spanish speech
-  words_per_minute: 150
+  words_per_minute: 160
 
 # LangSmith - Observability
 langsmith:

@@ -2,7 +2,7 @@
 News Tools - Herramientas MCP para obtención de noticias
 =========================================================
 
-Herramientas que encapsulan NewsClient para ser usadas
+Herramientas que encapsulan NewsClient y TavilyClient para ser usadas
 por agentes con tool calling.
 """
 
@@ -11,6 +11,7 @@ from typing import Optional
 from langchain_core.tools import tool
 
 from mcps import NewsClient
+from mcps.tavily_client import get_tavily_client
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +33,10 @@ def fetch_general_news_tool(
     country: str = "es"
 ) -> str:
     """
-    Obtiene las noticias generales más importantes del día.
+    Obtiene las noticias generales más importantes de actualidad.
     
     Usa esta herramienta cuando necesites obtener un resumen de las
-    noticias más relevantes del día en España o el país especificado.
+    noticias más relevantes de actualidad en España o el país especificado.
     
     Args:
         max_articles: Número máximo de artículos a obtener (default: 10)
@@ -136,6 +137,58 @@ def fetch_topic_news_tool(
         return f"Error al buscar noticias sobre '{topic}': {str(e)}"
 
 
+@tool
+def search_web_news_tool(
+    query: str,
+    max_articles: int = 5
+) -> str:
+    """
+    Busca noticias específicas en la web usando Tavily.
+    
+    Ideal para encontrar información específica, verificar hechos,
+    o buscar noticias sobre temas muy específicos que no estén
+    en los feeds principales de noticias.
+    
+    Args:
+        query: Búsqueda específica a realizar
+        max_articles: Número máximo de artículos (default: 5)
+    
+    Returns:
+        Texto con resultados de la búsqueda web incluyendo contenido relevante.
+    """
+    logger.info(f"[Tool] search_web_news llamado: query='{query}', max={max_articles}")
+    
+    try:
+        tavily = get_tavily_client()
+        results = tavily.search_news(query, max_results=max_articles, include_content=True)
+        
+        if not results:
+            return f"No se encontraron resultados para la búsqueda: '{query}'"
+        
+        formatted_results = [
+            f"🔍 BÚSQUEDA WEB: {query}\n"
+            f"📊 Resultados encontrados: {len(results)}\n"
+            "=" * 60
+        ]
+        
+        for i, result in enumerate(results, 1):
+            formatted_results.append(
+                f"\n{i}. {result['title']}\n"
+                f"   📰 Fuente: {result['source']}\n"
+                f"   🔗 URL: {result['url']}\n"
+                f"   📝 Descripción: {result['description']}\n"
+                f"   ⭐ Relevancia: {result['score']:.2f}\n"
+                f"   💬 Contenido: {result['content'][:300]}{'...' if len(result['content']) > 300 else ''}"
+            )
+        
+        return "\n".join(formatted_results)
+        
+    except Exception as e:
+        error_msg = f"Error en búsqueda web: {str(e)}"
+        logger.error(f"[Tool] {error_msg}")
+        return error_msg
+
+
 def get_news_tools() -> list:
     """Retorna todas las herramientas de noticias."""
-    return [fetch_general_news_tool, fetch_topic_news_tool]
+    return [fetch_general_news_tool, fetch_topic_news_tool, search_web_news_tool]
