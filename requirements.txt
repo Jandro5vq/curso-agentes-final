@@ -1,0 +1,50 @@
+# News Service Dependencies
+# =========================
+
+# LangGraph & LangChain (Core)
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-openai>=0.2.0
+langchain-core>=0.3.0
+
+# OpenAI
+openai>=1.0.0
+
+# Telegram Bot
+python-telegram-bot[job-queue]>=21.0
+
+# TTS - Opciones (elegir una):
+# Opción 1: Edge TTS (Microsoft, no requiere instalación especial)
+edge-tts>=6.1.0
+
+# Opción 2: Coqui TTS (requiere Python < 3.12 y Visual C++ Build Tools)
+# TTS>=0.22.0
+
+# Web Scraping
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# Date parsing
+python-dateutil>=2.8.0
+
+# Playwright (optional, for advanced scraping)
+# playwright>=1.40.0
+
+# Database
+aiosqlite>=0.20.0
+
+# Scheduler
+APScheduler>=3.10.0
+
+# Configuration
+pyyaml>=6.0.0
+python-dotenv>=1.0.0
+
+# Utilities
+pydantic>=2.0.0
+httpx>=0.27.0
+
+# Audio processing
+soundfile>=0.12.0
+numpy>=1.24.0

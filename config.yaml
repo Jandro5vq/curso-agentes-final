@@ -1,0 +1,79 @@
+# News Service Configuration
+# ==========================
+
+# OpenAI API Configuration
+openai:
+  api_key: "${OPENAI_API_KEY}"
+  model: "gpt-4o-mini"
+  temperature: 0.7
+
+# Telegram Bot Configuration
+telegram:
+  bot_token: "${TELEGRAM_BOT_TOKEN}"
+  polling_timeout: 30
+
+# News API Configuration
+news:
+  # Primary: NewsAPI.org (free tier: 100 requests/day)
+  newsapi_key: "${NEWSAPI_KEY}"
+  # Fallback: GNews API
+  gnews_key: "${GNEWS_KEY}"
+  # Default country for news (España)
+  country: "es"
+  # Default language
+  language: "es"
+  # Max articles per fetch
+  max_articles: 10
+  # Fuentes españolas preferidas (NewsAPI)
+  sources:
+    - "el-mundo"
+    - "el-pais" 
+    - "marca"
+    - "abc-es"
+  # Categorías de interés
+  categories:
+    - "general"
+    - "business"
+    - "technology"
+    - "sports"
+
+# TTS Configuration (Coqui TTS)
+tts:
+  # Spanish model - good quality and speed
+  model: "tts_models/es/css10/vits"
+  # Alternative multilingual model (slower but better):
+  # model: "tts_models/multilingual/multi-dataset/xtts_v2"
+  # Output directory for audio files
+  output_dir: "./audio"
+  # Use GPU if available
+  use_gpu: true
+
+# Persistence Configuration
+persistence:
+  database_path: "./data/news_state.db"
+
+# Scheduler Configuration
+scheduler:
+  # Time for daily news podcast (24h format)
+  daily_time: "08:00"
+  # Timezone
+  timezone: "Europe/Madrid"
+
+# Script Generation Settings
+script:
+  # Target duration in seconds for daily podcast
+  daily_duration: 180
+  # Target duration in seconds for mini podcast
+  mini_duration: 60
+  # Approximate words per minute for Spanish speech
+  words_per_minute: 150
+
+# LangSmith - Observability
+langsmith:
+  enabled: true
+  project: "news-service"
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
