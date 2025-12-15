@@ -26,7 +26,7 @@ Tu rol es transformar información en bruto en guiones atractivos y bien estruct
 para locución de audio del podcast "La IA Dice".
 
 ## Sobre el podcast:
-"La IA Dice" tiene dos formatos:
+"La IA Dice" tiene tres formatos:
 
 ### 1. DAILY (Podcast Diario)
 - Noticias MIXTAS y variadas de todos los temas de actualidad
@@ -39,6 +39,12 @@ para locución de audio del podcast "La IA Dice".
 - Profundiza en un área concreta (ej: "Píldora sobre ChatGPT", "Píldora sobre Tesla")
 - Duración: ~1 minuto (200-250 palabras)
 - Tono: Directo, especializado, al grano
+
+### 3. DEBATE (Análisis Multi-Perspectiva)
+- Analiza un tema desde MÚLTIPLES PERSPECTIVAS (Progresista, Conservador, Experto, Internacional)
+- Presenta diferentes puntos de vista sobre un tema controvertido o complejo
+- Duración: ~4-5 minutos (700-900 palabras)
+- Tono: Equilibrado, analítico, con voces diferenciadas
 
 ## Estilo de escritura:
 - Usa un tono informativo pero cercano
@@ -59,6 +65,16 @@ para locución de audio del podcast "La IA Dice".
 2. CONTEXTO: Breve introducción al tema
 3. DESARROLLO: Las noticias más relevantes sobre ese tema específico
 4. CIERRE: "Esto ha sido tu píldora de [TEMA] en La IA Dice. Hasta la próxima."
+
+## Estructura del guion DEBATE:
+1. APERTURA: "Hola, bienvenidos a La IA Dice. Hoy tenemos un debate especial sobre [TEMA]"
+2. INTRODUCCIÓN: Presenta el tema y por qué genera debate
+3. PERSPECTIVA PROGRESISTA: "Desde una visión progresista..." - enfocada en innovación, cambio social, nuevas soluciones
+4. PERSPECTIVA CONSERVADORA: "Por otro lado, desde una visión más tradicional..." - enfocada en cautela, tradición, impacto económico
+5. PERSPECTIVA EXPERTA: "Los especialistas en el tema señalan..." - datos técnicos, análisis objetivo, implicaciones reales
+6. PERSPECTIVA INTERNACIONAL: "A nivel global..." - cómo se ve desde otros países, comparativas internacionales
+7. SÍNTESIS: Resume los puntos clave de cada perspectiva de forma equilibrada
+8. CIERRE: "Este ha sido nuestro debate sobre [TEMA] en La IA Dice. Como siempre, tú tienes la última palabra. Hasta pronto."
 
 ## Formato:
 - NO uses asteriscos ni formato markdown
@@ -139,7 +155,62 @@ class WriterAgent:
         logger.info(f"[WriterAgent] Generando guion tipo '{script_type}'" + (f" sobre '{topic}'" if topic else ""))
         
         # Construir el prompt según el tipo
-        if script_type == "pildora":
+        if script_type == "debate":
+            topic_text = topic if topic else "el tema en cuestión"
+            length_instruction = f"""
+IMPORTANTE: Este es un DEBATE de "La IA Dice" sobre: {topic_text}
+
+⚠️ FORMATO CRÍTICO - DEBATE CON 4 VOCES DIFERENTES:
+Este debate será narrado por 4 personas diferentes. DEBES usar los marcadores de sección exactos.
+
+## MARCADORES OBLIGATORIOS (ÚSALOS EXACTAMENTE ASÍ):
+- [PRESENTADOR]: Voz del presentador/moderador (apertura, transiciones, cierre)
+- [PROGRESISTA]: Voz del analista progresista
+- [CONSERVADOR]: Voz del analista conservador  
+- [EXPERTO]: Voz del experto técnico
+- [INTERNACIONAL]: Voz del analista internacional
+
+## ESTRUCTURA OBLIGATORIA:
+
+[PRESENTADOR]
+Hola, bienvenidos a La IA Dice. Hoy tenemos un debate especial sobre {topic_text}. (2-3 oraciones introduciendo el tema y por qué genera debate)
+
+[PRESENTADOR]
+Comencemos escuchando la visión progresista.
+
+[PROGRESISTA]
+(150-200 palabras con el análisis progresista/social - usa PROGRESSIVE de las perspectivas)
+
+[PRESENTADOR]
+Ahora escuchemos la perspectiva más tradicional.
+
+[CONSERVADOR]
+(150-200 palabras con el análisis conservador/mercado - usa CONSERVATIVE de las perspectivas)
+
+[PRESENTADOR]
+Veamos qué dicen los expertos.
+
+[EXPERTO]
+(150-200 palabras con el análisis técnico - usa EXPERT de las perspectivas)
+
+[PRESENTADOR]
+Y finalmente, la perspectiva internacional.
+
+[INTERNACIONAL]
+(150-200 palabras con el análisis global - usa INTERNATIONAL de las perspectivas)
+
+[PRESENTADOR]
+(Síntesis de 2-3 oraciones resumiendo los puntos clave de cada perspectiva)
+Este ha sido nuestro debate sobre {topic_text} en La IA Dice. Como siempre, tú tienes la última palabra. Hasta pronto.
+
+## REGLAS:
+- SIEMPRE empieza cada sección con el marcador [NOMBRE] en su propia línea
+- Cada perspectiva debe tener contenido sustancial (150-200 palabras)
+- El presentador hace transiciones breves entre perspectivas
+- NO uses asteriscos, markdown ni formato especial
+- Escribe para ser ESCUCHADO, no leído
+"""
+        elif script_type == "pildora":
             topic_text = topic if topic else "tecnología"
             length_instruction = f"""
 IMPORTANTE: Este es una PÍLDORA de "La IA Dice" sobre: {topic_text}
@@ -207,7 +278,7 @@ Genera el guion ahora. Recuerda:
             # Validar guion con guardrail
             validation_result = self.script_guardrail.validate(
                 script=script,
-                script_type=script_type if script_type in ["daily", "pildora", "mini"] else "daily"
+                script_type=script_type if script_type in ["daily", "pildora", "mini", "debate"] else "daily"
             )
             
             if not validation_result.is_valid:

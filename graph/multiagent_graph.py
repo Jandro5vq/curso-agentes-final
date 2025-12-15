@@ -51,6 +51,7 @@ from agents import (
     ReporterAgent,
     WriterAgent, 
     ProducerAgent,
+    MultiPerspectiveAgent,
 )
 
 # Guardrails para validación de entrada
@@ -63,6 +64,7 @@ _orchestrator: OrchestratorAgent | None = None
 _reporter: ReporterAgent | None = None
 _writer: WriterAgent | None = None
 _producer: ProducerAgent | None = None
+_multi_perspective: MultiPerspectiveAgent | None = None
 
 # Instancia singleton del guardrail de entrada
 _input_guardrail: InputGuardrail | None = None
@@ -78,15 +80,16 @@ def _get_input_guardrail() -> InputGuardrail:
 
 def _get_agents():
     """Obtiene las instancias singleton de los agentes."""
-    global _orchestrator, _reporter, _writer, _producer
+    global _orchestrator, _reporter, _writer, _producer, _multi_perspective
     
     if _orchestrator is None:
         _orchestrator = OrchestratorAgent()
         _reporter = _orchestrator.reporter
         _writer = _orchestrator.writer
         _producer = _orchestrator.producer
+        _multi_perspective = MultiPerspectiveAgent()
     
-    return _orchestrator, _reporter, _writer, _producer
+    return _orchestrator, _reporter, _writer, _producer, _multi_perspective
 
 
 # =============================================================================
@@ -151,7 +154,7 @@ async def reporter_node(state: MultiAgentState) -> dict[str, Any]:
     """
     logger.info(f"[ReporterNode] Ejecutando con mode={state['mode']}")
     
-    _, reporter, _, _ = _get_agents()
+    _, reporter, _, _, _ = _get_agents()
     
     # Determinar la tarea según el modo
     mode = state["mode"]
@@ -198,29 +201,116 @@ Enfócate en un área temática coherente."""
     }
 
 
+async def multi_perspective_node(state: MultiAgentState) -> dict[str, Any]:
+    """
+    Nodo del agente MultiPerspective que analiza noticias desde múltiples ángulos.
+    
+    Este nodo es opcional y se activa solo para ciertos modos.
+    Analiza las noticias obtenidas desde 4 perspectivas diferentes:
+    - Progresista/Social
+    - Conservadora/Mercado
+    - Técnica/Experto
+    - Internacional/Comparativa
+    """
+    logger.info(f"[MultiPerspectiveNode] Analizando desde múltiples perspectivas")
+    
+    _, _, _, _, multi_perspective = _get_agents()
+    
+    news_content = state.get("news_content", "")
+    
+    if not news_content or len(news_content) < 50:
+        logger.debug("[MultiPerspectiveNode] Noticia muy corta, saltando perspectivas")
+        return {
+            "perspectives": None,
+            "current_agent": "multi_perspective",
+            "agent_history": state.get("agent_history", []) + [{
+                "agent": "multi_perspective",
+                "status": "skipped",
+                "input": "Noticia muy corta",
+                "output": None,
+                "tools_used": [],
+                "error": None,
+            }]
+        }
+    
+    try:
+        # Ejecutar análisis de perspectivas en paralelo
+        perspectives = await multi_perspective.analyze_news(news_content)
+        
+        step = {
+            "agent": "multi_perspective",
+            "status": "completed",
+            "input": f"news_length={len(news_content)}",
+            "output": f"Generadas 4 perspectivas + resumen",
+            "tools_used": ["perspective_analysis"],
+            "error": None,
+        }
+        
+        return {
+            "perspectives": perspectives,
+            "current_agent": "multi_perspective",
+            "agent_history": state.get("agent_history", []) + [step],
+        }
+        
+    except Exception as e:
+        logger.error(f"[MultiPerspectiveNode] Error: {e}")
+        
+        step = {
+            "agent": "multi_perspective",
+            "status": "failed",
+            "input": f"news_length={len(news_content)}",
+            "output": None,
+            "tools_used": [],
+            "error": str(e),
+        }
+        
+        return {
+            "perspectives": None,
+            "current_agent": "multi_perspective",
+            "agent_history": state.get("agent_history", []) + [step],
+            "error": str(e),
+        }
+
+
 async def writer_node(state: MultiAgentState) -> dict[str, Any]:
     """
     Nodo del agente Writer que genera guiones de podcast.
+    
+    Ahora integra perspectivas múltiples si están disponibles.
     """
     logger.info(f"[WriterNode] Generando guion para mode={state['mode']}")
     
-    _, _, writer, _ = _get_agents()
+    _, _, writer, _, _ = _get_agents()
     
     news_content = state.get("news_content", "")
+    perspectives = state.get("perspectives", None)
     mode = state["mode"]
     user_input = state.get("user_input", "")
     
-    # Determinar tipo de guion: daily (noticias mixtas) o pildora (temático)
+    # Determinar tipo de guion según modo
     if mode == "daily":
         script_type = "daily"
         topic = None
+    elif mode == "debate":
+        script_type = "debate"
+        topic = user_input if user_input else "tema general"
     else:
         script_type = "pildora"
         topic = user_input if user_input else "tecnología"
     
+    # Si tenemos perspectivas múltiples, incluirlas en el contexto
+    context = news_content
+    if perspectives:
+        context += "\n\n[PERSPECTIVAS MÚLTIPLES]\n"
+        for perspective_key, content in perspectives.items():
+            if perspective_key != 'summary':
+                context += f"\n{perspective_key.upper()}: {content}\n"
+        if 'summary' in perspectives:
+            context += f"\nRESUMEN DE PERSPECTIVAS: {perspectives['summary']}\n"
+    
     # Ejecutar agente
     result = await writer.invoke(
-        news_content=news_content,
+        news_content=context,
         script_type=script_type,
         topic=topic,
     )
@@ -228,7 +318,7 @@ async def writer_node(state: MultiAgentState) -> dict[str, Any]:
     step = {
         "agent": "writer",
         "status": "completed" if result["success"] else "failed",
-        "input": f"script_type={script_type}, news_length={len(news_content)}",
+        "input": f"script_type={script_type}, news_length={len(context)}, has_perspectives={perspectives is not None}",
         "output": f"Script: {result.get('word_count', 0)} words",
         "tools_used": [],  # Writer no usa tools externos
         "error": result.get("error"),
@@ -248,20 +338,25 @@ async def producer_node(state: MultiAgentState) -> dict[str, Any]:
     """
     logger.info(f"[ProducerNode] Produciendo para chat_id={state['chat_id']}")
     
-    _, _, _, producer = _get_agents()
+    _, _, _, producer, _ = _get_agents()
     
     script = state.get("script", "")
     chat_id = state["chat_id"]
     mode = state["mode"]
     user_input = state.get("user_input", "")
     
-    # Determinar tipo y topic
+    # Determinar tipo y topic según el modo
     if mode == "daily":
         podcast_type = "daily"
         topic = None
+    elif mode == "debate":
+        podcast_type = "debate"
+        topic = user_input if user_input else "tema de actualidad"
     else:
         podcast_type = "pildora"
         topic = user_input if user_input else None
+    
+    logger.info(f"[ProducerNode] Tipo de podcast: {podcast_type}, topic: {topic}")
     
     # Ejecutar agente con tool calling (TTS + Telegram)
     result = await producer.invoke(
@@ -295,7 +390,7 @@ async def answer_node(state: MultiAgentState) -> dict[str, Any]:
     """
     logger.info(f"[AnswerNode] Respondiendo pregunta para chat_id={state['chat_id']}")
     
-    orchestrator, _, _, producer = _get_agents()
+    orchestrator, _, _, producer, _ = _get_agents()
     
     news_content = state.get("news_content", "")
     question = state.get("user_input", "")
@@ -367,16 +462,32 @@ def route_by_mode(state: MultiAgentState) -> Literal["reporter"]:
     return "reporter"
 
 
-def route_after_reporter(state: MultiAgentState) -> Literal["writer", "answer"]:
+def route_after_reporter(
+    state: MultiAgentState
+) -> Literal["multi_perspective", "writer", "answer"]:
     """
-    Después del reporter, decidimos si generar guion o responder.
+    Después del reporter, decidimos el siguiente paso:
+    - Para debate: vamos a perspectivas múltiples
+    - Para daily/mini_podcast: vamos directo a writer (sin perspectivas)
+    - Para question: vamos a answer (respuesta textual)
     """
     mode = state["mode"]
     
     if mode == "question":
         return "answer"
+    elif mode == "debate":
+        # Solo debate usa perspectivas múltiples
+        return "multi_perspective"
     else:
+        # daily y mini_podcast van directo a writer
         return "writer"
+
+
+def route_after_multi_perspective(state: MultiAgentState) -> Literal["writer"]:
+    """
+    Después del análisis de perspectivas, siempre vamos al writer.
+    """
+    return "writer"
 
 
 def route_after_writer(state: MultiAgentState) -> Literal["producer"]:
@@ -409,6 +520,7 @@ def create_multiagent_graph() -> StateGraph:
     Crea el grafo multi-agente con tool calling real.
     
     Flujos:
+    - debate: router → reporter → multi_perspective → writer → producer → finalize
     - daily/mini_podcast: router → reporter → writer → producer → finalize
     - question: router → reporter → answer → finalize
     
@@ -423,6 +535,7 @@ def create_multiagent_graph() -> StateGraph:
     # Agregar nodos
     builder.add_node("router", router_node)
     builder.add_node("reporter", reporter_node)
+    builder.add_node("multi_perspective", multi_perspective_node)
     builder.add_node("writer", writer_node)
     builder.add_node("producer", producer_node)
     builder.add_node("answer", answer_node)
@@ -434,15 +547,19 @@ def create_multiagent_graph() -> StateGraph:
     # Router → Reporter (siempre)
     builder.add_edge("router", "reporter")
     
-    # Reporter → Writer o Answer (según mode)
+    # Reporter → MultiPerspective o Answer (según mode)
     builder.add_conditional_edges(
         "reporter",
         route_after_reporter,
         {
+            "multi_perspective": "multi_perspective",
             "writer": "writer",
             "answer": "answer",
         }
     )
+    
+    # MultiPerspective → Writer
+    builder.add_edge("multi_perspective", "writer")
     
     # Writer → Producer
     builder.add_edge("writer", "producer")

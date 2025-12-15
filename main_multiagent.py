@@ -75,7 +75,7 @@ def get_today_date() -> str:
 
 async def run_multiagent_graph(
     chat_id: int,
-    mode: Literal["daily", "question", "mini_podcast"],
+    mode: Literal["daily", "question", "mini_podcast", "debate"],
     user_input: str | None = None
 ) -> dict:
     """
@@ -83,7 +83,7 @@ async def run_multiagent_graph(
     
     Args:
         chat_id: ID del chat de Telegram
-        mode: Modo de operación
+        mode: Modo de operación (daily, mini_podcast, debate, question)
         user_input: Entrada del usuario
         
     Returns:
@@ -172,16 +172,23 @@ Tu podcast de noticias general con *agentes inteligentes*:
 • 🤖 *ReporterAgent* → Busca noticias
 • ✍️ *WriterAgent* → Genera guiones
 • 🎧 *ProducerAgent* → Produce y envía audio
+• 🎭 *MultiPerspectiveAgent* → Analiza desde múltiples ángulos
 
 *Comandos disponibles:*
 
-📰 **/news** - Daily: Resumen diario de noticias mixtas (~3 min)
+📰 **/news** - Daily: Resumen diario de noticias mixtas (~3-5 min)
 
-💊 **/podcast <tema>** - Píldora: Mini-podcast sobre un tema específico (~1 min)
+💊 **/podcast <tema>** - Píldora: Mini-podcast sobre un tema específico (~1-2 min)
    _Ejemplos:_
    • `/podcast inteligencia artificial`
    • `/podcast OpenAI`
    • `/podcast criptomonedas`
+
+🎭 **/debate <tema>** - Debate: Análisis desde 4 perspectivas diferentes (~5-7 min)
+   _Ejemplos:_
+   • `/debate cambio climático`
+   • `/debate impuestos`
+   • `/debate energía nuclear`
 
 ℹ️ **/status** - Estado del sistema
 📊 **/graph** - Ver arquitectura
@@ -269,6 +276,55 @@ async def podcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         
     except Exception as e:
         logger.error(f"[Telegram] Error en /podcast: {e}")
+        await wait_message.edit_text(f"❌ Error: {str(e)}")
+
+
+async def debate_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handler para /debate <tema> - Genera un podcast con perspectivas múltiples."""
+    chat_id = update.effective_chat.id
+    topic = " ".join(context.args) if context.args else None
+    
+    logger.info(f"[Telegram] /debate de chat_id={chat_id}, topic={topic}")
+    
+    # El tema es obligatorio para los Debates
+    if not topic:
+        await update.message.reply_text(
+            "🎭 *Debate - Perspectivas Múltiples*\n\n"
+            "Los debates analizan un tema desde 4 perspectivas diferentes:\n"
+            "🔴 Progresista/Social\n"
+            "🔵 Conservadora/Mercado\n"
+            "🟢 Técnica/Experto\n"
+            "🟡 Internacional/Comparativa\n\n"
+            "📝 *Uso:* `/debate <tema>`\n\n"
+            "📌 *Ejemplos:*\n"
+            "• `/debate cambio climático`\n"
+            "• `/debate impuestos`\n"
+            "• `/debate inteligencia artificial regulación`\n"
+            "• `/debate energía nuclear`\n"
+            "• `/debate reforma laboral`",
+            parse_mode="Markdown"
+        )
+        return
+    
+    wait_message = await update.message.reply_text(
+        f"🎭 Analizando *{topic}* desde múltiples perspectivas...",
+        parse_mode="Markdown"
+    )
+    
+    try:
+        result = await run_multiagent_graph(
+            chat_id, 
+            mode="debate", 
+            user_input=topic
+        )
+        
+        if result.get("success"):
+            await wait_message.edit_text(f"✅ Debate sobre *{topic}* completado!", parse_mode="Markdown")
+        else:
+            await wait_message.edit_text(f"❌ Error: {result.get('error')}")
+        
+    except Exception as e:
+        logger.error(f"[Telegram] Error en /debate: {e}")
         await wait_message.edit_text(f"❌ Error: {str(e)}")
 
 
@@ -442,6 +498,7 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("news", news_command))
     application.add_handler(CommandHandler("podcast", podcast_command))
+    application.add_handler(CommandHandler("debate", debate_command))
     application.add_handler(CommandHandler("status", status_command))
     application.add_handler(CommandHandler("graph", graph_command))
     application.add_handler(MessageHandler(

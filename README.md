@@ -73,36 +73,50 @@ El sistema utiliza **4 agentes especializados** que trabajan en conjunto:
    - Obtiene noticias usando herramientas MCP
    - Tools: `fetch_general_news_tool`, `fetch_topic_news_tool`, `search_web_news_tool`
 
-3. **✍️ WriterAgent** (Especialista en Guiones)
-   - Transforma noticias en guiones para podcast
-   - Usa LLM directo (sin tools externos)
+3. **🎭 MultiPerspectiveAgent** (Especialista en Análisis Crítico) ⭐ **NUEVO**
+   - Analiza noticias desde 4 perspectivas contrastadas
+   - 🔴 Perspectiva Progresista/Social
+   - 🔵 Perspectiva Conservadora/Mercado
+   - 🟢 Perspectiva Técnica/Experto
+   - 🟡 Perspectiva Internacional/Comparativa
 
-4. **🎧 ProducerAgent** (Especialista en Producción)
+4. **✍️ WriterAgent** (Especialista en Guiones)
+   - Transforma noticias + perspectivas en guiones para podcast
+   - Usa LLM directo (sin tools externos)
+   - Integra análisis multiangular en la narrativa
+
+5. **🎧 ProducerAgent** (Especialista en Producción)
    - Genera audio con TTS y envía por Telegram
+   - Usa voces diferentes para cada perspectiva
    - Tools: `synthesize_speech_tool`, `send_telegram_audio_tool`, `send_telegram_message_tool`
 
 ## 🎯 Funcionalidades
 
-### 📻 **Daily** (~3 minutos)
+### 📻 **Daily** (~3-5 minutos)
 - Resumen completo de las noticias más importantes
-- Cobertura de todos los temas: política, economía, tecnología, deportes, etc.
+- Cobertura balanceada de todos los temas
 - Generación automática programada
 - Audio profesional con Edge TTS
+- Comando: Se ejecuta automáticamente a las 08:00 (configurable)
 
-### 💊 **Píldoras** (~1 minuto) 
-- Mini-podcasts temáticos sobre temas específicos
+### 💊 **Píldoras Temáticas** (~1-2 minutos)
+- Mini-podcasts enfocados en temas específicos
+- Análisis rápido y directo
 - Comando: `/podcast <tema>`
+- Ejemplos: `/podcast inteligencia artificial`, `/podcast Tesla`
 
-### 🌐 **Búsqueda Web Avanzada**
-- Integración con Tavily para búsquedas específicas
-- Extracción de contenido en tiempo real
-- Verificación de hechos y noticias especializadas
-- Ejemplos: `/podcast inteligencia artificial`, `/podcast política`
+### 🎭 **Debates - Perspectivas Múltiples** (~5-7 minutos) ⭐ **NUEVO**
+- Análisis desde 4 perspectivas diferentes
+- Perspectivas balanceadas sin sesgo
+- 4 voces TTS distintivas
+- Comando: `/debate <tema>`
+- Ejemplos: `/debate cambio climático`, `/debate impuestos`, `/debate energía nuclear`
+- Perspectivas incluidas:
+  - 🔴 Progresista/Social
+  - 🔵 Conservadora/Mercado
+  - 🟢 Técnica/Experto
+  - 🟡 Internacional/Comparativa
 
-### ❓ **Preguntas**
-- Respuestas directas sobre noticias
-- Búsqueda específica por tema
-- Respuesta en texto (sin audio)
 
 ## 📁 Estructura del Proyecto (Limpia)
 
@@ -118,13 +132,14 @@ news_service/
 │   ├── __init__.py
 │   ├── orchestrator.py        #   🎯 Agente maestro coordinador
 │   ├── reporter.py            #   📰 Agente de noticias
+│   ├── multi_perspective.py   #   🎭 Agente de perspectivas múltiples ⭐ NUEVO
 │   ├── writer.py              #   ✍️ Agente generador de guiones
 │   └── producer.py            #   🎧 Agente de producción y envío
 ├──
 ├── graph/                     # 📊 LangGraph Multi-Agente
 │   ├── __init__.py
-│   ├── multiagent_graph.py    #   📈 Definición del grafo
-│   └── multiagent_state.py    #   💾 Estado compartido
+│   ├── multiagent_graph.py    #   📈 Definición del grafo (actualizado)
+│   └── multiagent_state.py    #   💾 Estado compartido (actualizado)
 ├──
 ├── mcps/                      # 🔌 Clientes MCP
 │   ├── __init__.py
@@ -144,12 +159,36 @@ news_service/
 ├──
 ├── audio/                     # 🎵 Archivos de audio generados
 ├── data/                      # 📊 Base de datos
+├── IMPLEMENTACION_PERSPECTIVAS.md  # 📖 Documentación de perspectivas
 └── README.md                  # 📖 Esta documentación
 ```
 
-## 🔄 Flujo Multi-Agente (LangGraph)
+## 🔄 Flujo Multi-Agente (LangGraph) - Actualizado
 
+### Daily (`/news`) - Flujo simple:
 ```
+Router → Reporter → Writer → Producer → Finalize
+```
+
+### Píldora (`/podcast`) - Flujo simple:
+```
+Router → Reporter → Writer → Producer → Finalize
+```
+
+### Debate (`/debate`) ⭐ - Flujo con perspectivas:
+```
+Router → Reporter → MultiPerspective → Writer → Producer → Finalize
+                    (4 perspectivas)
+```
+
+### Pregunta o mensaje - Flujo directo:
+```
+Router → Reporter → Answer → Finalize
+```
+
+**Resumen**: Las perspectivas múltiples se activan **solo** con `/debate`, manteniendo la simplicidad de daily y píldoras.
+
+````
                     ┌─────────────────┐
                     │      START      │
                     └────────┬────────┘

@@ -33,11 +33,12 @@ class MultiAgentState(TypedDict):
     date: str  # Formato: YYYY-MM-DD
     
     # Modo de operación
-    mode: Literal["daily", "mini_podcast", "question"]
+    mode: Literal["daily", "mini_podcast", "question", "debate"]
     user_input: str | None  # Pregunta del usuario o tema
     
     # Datos intermedios
     news_content: str | None  # Noticias obtenidas por Reporter
+    perspectives: dict[str, str] | None  # Análisis desde múltiples perspectivas
     script: str | None  # Guion generado por Writer
     audio_path: str | None  # Ruta del audio generado
     answer: str | None  # Respuesta textual (modo question)
@@ -57,7 +58,7 @@ class MultiAgentState(TypedDict):
 def create_initial_multiagent_state(
     chat_id: int,
     date: str,
-    mode: Literal["daily", "mini_podcast", "question"],
+    mode: Literal["daily", "mini_podcast", "question", "debate"],
     user_input: str | None = None,
 ) -> MultiAgentState:
     """
@@ -78,6 +79,7 @@ def create_initial_multiagent_state(
         mode=mode,
         user_input=user_input,
         news_content=None,
+        perspectives=None,
         script=None,
         audio_path=None,
         answer=None,

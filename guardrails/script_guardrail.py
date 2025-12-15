@@ -51,6 +51,14 @@ class ScriptGuardrail:
             "max_chars": 2000,
             "duration_seconds": 60,
         },
+        "debate": {  # Debate multi-perspectiva
+            "min_words": 600,
+            "max_words": 1000,
+            "target_words": 800,
+            "min_chars": 3500,
+            "max_chars": 6500,
+            "duration_seconds": 300,  # ~4-5 minutos
+        },
     }
     
     # Frases obligatorias de apertura (al menos una debe estar)
@@ -67,6 +75,7 @@ class ScriptGuardrail:
         "nos vemos",
         "gracias por escuchar",
         "esto ha sido",
+        "tú tienes la última palabra",  # Para debates
     ]
     
     def __init__(self):
@@ -77,7 +86,7 @@ class ScriptGuardrail:
     def validate(
         self,
         script: str,
-        script_type: Literal["daily", "pildora", "mini"] = "daily"
+        script_type: Literal["daily", "pildora", "mini", "debate"] = "daily"
     ) -> ValidationResult:
         """
         Valida un guion de podcast completo.
