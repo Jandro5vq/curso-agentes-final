@@ -14,6 +14,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.tools import tool
 
+# Guardrails
+from guardrails import ScriptGuardrail
+
 logger = logging.getLogger(__name__)
 
 
@@ -110,7 +113,9 @@ class WriterAgent:
             temperature=temperature,
             api_key=os.getenv("OPENAI_API_KEY"),
         )
-        logger.info("[WriterAgent] Agente inicializado")
+        # Inicializar guardrail para validación de guiones
+        self.script_guardrail = ScriptGuardrail()
+        logger.info("[WriterAgent] Agente inicializado con guardrail")
     
     async def invoke(
         self, 
@@ -199,11 +204,35 @@ Genera el guion ahora. Recuerda:
             
             logger.info(f"[WriterAgent] Guion generado: {word_count} palabras")
             
+            # Validar guion con guardrail
+            validation_result = self.script_guardrail.validate(
+                script=script,
+                script_type=script_type if script_type in ["daily", "pildora", "mini"] else "daily"
+            )
+            
+            if not validation_result.is_valid:
+                logger.warning(f"[WriterAgent] Guardrail falló: {validation_result.message}")
+                return {
+                    "success": False,
+                    "error": f"Validación fallida: {validation_result.message}",
+                    "script": script,
+                    "word_count": word_count,
+                    "validation_details": validation_result.details,
+                }
+            
+            if validation_result.status.value == "warning":
+                logger.info(f"[WriterAgent] Guardrail con warnings: {validation_result.details}")
+            
             return {
                 "success": True,
                 "script": script,
                 "word_count": word_count,
                 "script_type": script_type,
+                "validation": {
+                    "status": validation_result.status.value,
+                    "message": validation_result.message,
+                    "details": validation_result.details,
+                },
             }
             
         except Exception as e:

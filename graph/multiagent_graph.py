@@ -53,6 +53,9 @@ from agents import (
     ProducerAgent,
 )
 
+# Guardrails para validación de entrada
+from guardrails import InputGuardrail, ContentValidator
+
 logger = logging.getLogger(__name__)
 
 # Instancias singleton de agentes
@@ -60,6 +63,17 @@ _orchestrator: OrchestratorAgent | None = None
 _reporter: ReporterAgent | None = None
 _writer: WriterAgent | None = None
 _producer: ProducerAgent | None = None
+
+# Instancia singleton del guardrail de entrada
+_input_guardrail: InputGuardrail | None = None
+
+
+def _get_input_guardrail() -> InputGuardrail:
+    """Obtiene la instancia singleton del guardrail de entrada."""
+    global _input_guardrail
+    if _input_guardrail is None:
+        _input_guardrail = InputGuardrail()
+    return _input_guardrail
 
 
 def _get_agents():
@@ -82,8 +96,40 @@ def _get_agents():
 async def router_node(state: MultiAgentState) -> dict[str, Any]:
     """
     Nodo inicial que prepara el estado para el flujo.
+    Incluye validación de entrada con guardrails.
     """
     logger.info(f"[Router] Mode: {state['mode']}, Chat: {state['chat_id']}")
+    
+    # Validar entrada del usuario con guardrail
+    user_input = state.get("user_input")
+    guardrail = _get_input_guardrail()
+    
+    validation_info = None
+    if user_input:
+        input_type = "question" if state["mode"] == "question" else "topic"
+        validation_result = guardrail.validate(user_input, input_type=input_type)
+        
+        if not validation_result.is_valid:
+            logger.warning(f"[Router] Input guardrail falló: {validation_result.message}")
+            return {
+                "current_agent": "router",
+                "error": f"Entrada no válida: {validation_result.message}",
+                "success": False,
+                "agent_history": state.get("agent_history", []) + [{
+                    "agent": "router",
+                    "status": "failed",
+                    "input": f"mode={state['mode']}, user_input={user_input[:50]}...",
+                    "output": f"Guardrail: {validation_result.message}",
+                    "tools_used": ["input_guardrail"],
+                    "error": validation_result.message,
+                }],
+            }
+        
+        validation_info = {
+            "guardrail_status": validation_result.status.value,
+            "guardrail_message": validation_result.message,
+        }
+        logger.info(f"[Router] Input guardrail pasó: {validation_result.status.value}")
     
     return {
         "current_agent": "router",
@@ -91,10 +137,11 @@ async def router_node(state: MultiAgentState) -> dict[str, Any]:
             "agent": "router",
             "status": "completed",
             "input": f"mode={state['mode']}",
-            "output": "Routing initiated",
-            "tools_used": [],
+            "output": "Routing initiated" + (f" - Guardrail: {validation_info['guardrail_status']}" if validation_info else ""),
+            "tools_used": ["input_guardrail"] if user_input else [],
             "error": None,
         }],
+        "metadata": {**state.get("metadata", {}), "input_validation": validation_info} if validation_info else state.get("metadata", {}),
     }
 
 
